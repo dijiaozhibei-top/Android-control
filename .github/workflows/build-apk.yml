@@ -55,7 +55,7 @@ jobs:
 
     - name: Accept Android SDK licenses
       run: |
-        yes | sdkmanager --licenses || true
+        echo "y" | sdkmanager --licenses || true
 
     - name: Build Debug APK
       run: |
