@@ -21,18 +21,49 @@ Android-control/
 
 ## 使用说明
 
-### 1. 准备Android设备
+### 方法一：使用GitHub Actions自动构建APK（推荐）
 
-- 需要一台已Root的Android设备
-- Android版本建议7.0或以上
-- 确保设备与Web控制端在同一局域网
+1. **触发构建**
+   - 代码推送到 `main` 或 `develop` 分支会自动触发构建
+   - 在GitHub仓库的 "Actions" 标签页手动触发工作流
+   - 访问：https://github.com/dijiaozhibei-top/Android-control/actions
 
-### 2. 安装Android客户端
+2. **下载APK**
+   - 构建完成后，在Actions页面找到工作流运行记录
+   - 点击进入，在 "Artifacts" 区域下载APK
+   - `android-control-debug`: 调试版本APK
+   - `android-control-release`: 发布版本APK（未签名）
 
-1. 在Android Studio中打开`android-client`项目
-2. 编译并安装APK到Android设备
-3. 启动应用，授予截屏和root权限
-4. 记录显示的设备IP地址和端口号
+3. **Releases下载**
+   - 推送到 `main` 分支会自动创建GitHub Release
+   - 访问：https://github.com/dijiaozhibei-top/Android-control/releases
+   - 下载最新版本的APK
+
+### 方法二：本地Android Studio构建
+
+1. **准备Android设备**
+   - 需要一台已Root的Android设备
+   - Android版本建议7.0或以上
+   - 确保设备与Web控制端在同一局域网
+
+2. **在Android Studio中打开项目**
+   ```bash
+   打开 android-client 文件夹
+   ```
+
+3. **编译和安装**
+   - 点击 "Run" 按钮或使用快捷键 Shift+F10
+   - 或者使用命令行构建：
+     ```bash
+     cd android-client
+     ./gradlew assembleDebug  # 构建调试版本
+     ./gradlew assembleRelease  # 构建发布版本
+     ```
+
+4. **启动应用**
+   - 安装APK到Android设备
+   - 授予截屏和root权限
+   - 记录显示的设备IP地址和端口号（默认8080）
 
 ### 3. 启动Web控制端
 
@@ -162,7 +193,34 @@ npm run build
 ```
 
 **Android客户端APK构建：**
-- 在Android Studio中选择 Build > Build Bundle(s) / APK(s) > Build APK(s)
+
+方式一：使用GitHub Actions自动构建
+```bash
+git push origin main  # 自动触发构建
+```
+然后访问GitHub Actions页面下载构建产物。
+
+方式二：本地构建
+```bash
+cd android-client
+./gradlew assembleDebug    # 构建调试版本
+./gradlew assembleRelease  # 构建发布版本
+```
+
+**手动触发GitHub Actions构建：**
+1. 访问 https://github.com/dijiaozhibei-top/Android-control/actions
+2. 选择 "Build Android APK" 工作流
+3. 点击 "Run workflow"
+4. 选择分支并运行
+
+**构建产物位置：**
+- **Debug APK**: `android-client/app/build/outputs/apk/debug/app-debug.apk`
+- **Release APK**: `android-client/app/build/outputs/apk/release/app-release-unsigned.apk`
+
+**GitHub Actions输出：**
+- 构建成功后会自动创建Release
+- Release包含调试版和发布版APK
+- 构建产物保留30天
 
 ## 许可证
 
@@ -175,3 +233,31 @@ MIT License
 ## 免责声明
 
 本工具仅用于合法的设备管理和技术学习目的。使用者需自行承担使用本工具产生的所有责任。请勿用于任何非法用途。
+
+## GitHub Actions CI/CD
+
+项目已配置GitHub Actions自动构建APK，支持以下触发方式：
+
+### 触发条件
+- ✅ 推送代码到 `main` 或 `develop` 分支
+- ✅ 针对这些分支的Pull Request
+- ✅ 手动触发（在Actions页面）
+
+### 工作流功能
+1. **自动构建**: 检测到Android客户端代码变更时自动构建
+2. **多版本输出**: 同时构建Debug和Release版本
+3. **自动发布**: 推送到main分支时创建GitHub Release
+4. **构建产物**: 上传APK到GitHub Actions Artifacts
+
+### 构建产物说明
+- `android-control-debug`: 调试版本，使用debug签名
+- `android-control-release`: 发布版本，未签名（需自行签名）
+
+### 查看构建状态
+- Actions页面: https://github.com/dijiaozhibei-top/Android-control/actions
+- README徽章: 显示最新的构建状态
+
+### 自定义构建
+如需修改构建配置，编辑 `.github/workflows/build-apk.yml`
+
+**注意**: Release版本APK未签名，如需发布到应用商店，需要使用自己的密钥进行签名。

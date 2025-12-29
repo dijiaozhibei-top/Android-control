@@ -1,0 +1,99 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'android-client/**'
+      - '.github/workflows/build-apk.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'android-client/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    - name: Grant execute permission for gradlew
+      run: |
+        cd android-client
+        chmod +x gradlew
+
+    - name: Build Debug APK
+      run: |
+        cd android-client
+        ./gradlew assembleDebug --stacktrace
+
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-control-debug
+        path: android-client/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
+
+    - name: Build Release APK (unsigned)
+      run: |
+        cd android-client
+        ./gradlew assembleRelease --stacktrace
+
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-control-release
+        path: android-client/app/build/outputs/apk/release/app-release-unsigned.apk
+        retention-days: 30
+
+    - name: Get version info
+      id: version
+      run: |
+        cd android-client
+        VERSION_NAME=$(grep "versionName" app/build.gradle.kts | head -1 | awk '{print $3}' | tr -d '"')
+        echo "version=${VERSION_NAME}" >> $GITHUB_OUTPUT
+
+    - name: Create Release (on main branch)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: Android Control v${{ steps.version.outputs.version }}
+        body: |
+          ## Android远程控制APK发布
+          
+          ### 功能特性
+          - 📱 实时屏幕共享
+          - 🖱️ 远程点击控制
+          - 👆 滑动操作
+          - ⌨️ 按键模拟
+          
+          ### 下载说明
+          - `app-debug.apk`: 调试版本，可直接安装
+          - `app-release-unsigned.apk`: 发布版本（未签名）
+          
+          ### 使用方法
+          1. 安装APK到Android设备
+          2. 授予截屏和Root权限
+          3. 记录设备IP地址和端口
+          4. 访问Web控制端进行连接和控制
+          
+          ### Web控制端
+          访问：https://github.com/dijiaozhibei-top/Android-control
+        files: |
+          android-client/app/build/outputs/apk/debug/app-debug.apk
+          android-client/app/build/outputs/apk/release/app-release-unsigned.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
