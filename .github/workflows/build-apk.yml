@@ -29,6 +29,9 @@ jobs:
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        api-level: 34
+        build-tools: 34.0.0
 
     - name: Grant execute permission for gradlew
       run: |
@@ -52,10 +55,6 @@ jobs:
         cd android-client
         echo "=== Checking gradlew ==="
         ./gradlew --version
-
-    - name: Accept Android SDK licenses
-      run: |
-        echo "y" | sdkmanager --licenses || true
 
     - name: Build Debug APK
       run: |
