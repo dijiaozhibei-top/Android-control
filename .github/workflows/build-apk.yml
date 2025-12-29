@@ -27,6 +27,9 @@ jobs:
         distribution: 'temurin'
         cache: 'gradle'
 
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
     - name: Grant execute permission for gradlew
       run: |
         cd android-client
@@ -58,7 +61,14 @@ jobs:
       run: |
         cd android-client
         echo "=== Building Debug APK ==="
-        ./gradlew assembleDebug --stacktrace --info || ./gradlew assembleDebug --stacktrace --debug
+        ./gradlew assembleDebug --stacktrace --info || (echo "=== Build failed, trying with debug ===" && ./gradlew assembleDebug --stacktrace --debug)
+      continue-on-error: true
+
+    - name: Capture build logs
+      if: failure()
+      run: |
+        cd android-client
+        find . -name "*.log" -type f 2>/dev/null | head -10 || echo "No log files found"
 
     - name: Check Debug APK exists
       run: |
