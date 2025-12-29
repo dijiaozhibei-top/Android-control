@@ -1,0 +1,177 @@
+{
+  "total_count": 1,
+  "jobs": [
+    {
+      "id": 59062392789,
+      "run_id": 20565236405,
+      "workflow_name": "Build Android APK",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/dijiaozhibei-top/Android-control/actions/runs/20565236405",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQwYFK88AAAANwGSX1Q",
+      "head_sha": "ca08d5f340e7b69bdae76cc0b2cfc4dd47c6c181",
+      "url": "https://api.github.com/repos/dijiaozhibei-top/Android-control/actions/jobs/59062392789",
+      "html_url": "https://github.com/dijiaozhibei-top/Android-control/actions/runs/20565236405/job/59062392789",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2025-12-29T05:00:09Z",
+      "started_at": "2025-12-29T05:00:13Z",
+      "completed_at": "2025-12-29T05:02:15Z",
+      "name": "build",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2025-12-29T05:00:14Z",
+          "completed_at": "2025-12-29T05:00:16Z"
+        },
+        {
+          "name": "Checkout code",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2025-12-29T05:00:16Z",
+          "completed_at": "2025-12-29T05:00:16Z"
+        },
+        {
+          "name": "Set up JDK 17",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2025-12-29T05:00:16Z",
+          "completed_at": "2025-12-29T05:00:17Z"
+        },
+        {
+          "name": "Grant execute permission for gradlew",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2025-12-29T05:00:17Z",
+          "completed_at": "2025-12-29T05:00:17Z"
+        },
+        {
+          "name": "List android-client directory",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2025-12-29T05:00:17Z",
+          "completed_at": "2025-12-29T05:00:17Z"
+        },
+        {
+          "name": "Check Gradle wrapper",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2025-12-29T05:00:17Z",
+          "completed_at": "2025-12-29T05:00:21Z"
+        },
+        {
+          "name": "Accept Android SDK licenses",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2025-12-29T05:00:21Z",
+          "completed_at": "2025-12-29T05:00:21Z"
+        },
+        {
+          "name": "Build Debug APK",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8,
+          "started_at": "2025-12-29T05:00:21Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Check Debug APK exists",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Upload Debug APK",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Build Release APK (unsigned)",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Check Release APK exists",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Upload Release APK",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Get version info",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Create Release (on main branch)",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 15,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Post Set up JDK 17",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Post Checkout code",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 30,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 31,
+          "started_at": "2025-12-29T05:02:14Z",
+          "completed_at": "2025-12-29T05:02:14Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/dijiaozhibei-top/Android-control/check-runs/59062392789",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000002,
+      "runner_name": "GitHub Actions 1000000002",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}
