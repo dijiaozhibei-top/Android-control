@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android远程控制</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .connection-panel {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input {
+            padding: 0.6rem 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.9rem;
+            width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .input.short {
+            width: 100px;
+        }
+
+        .button {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button.primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .button.danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .button.danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status.connected {
+            background: #22c55e;
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .screen-container {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            min-height: 600px;
+        }
+
+        .screen-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 12px;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .screen-canvas.active {
+            display: block;
+        }
+
+        .screen-canvas:hover {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.6);
+        }
+
+        .screen-placeholder {
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .screen-placeholder p {
+            font-size: 1.1rem;
+        }
+
+        .control-panel {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+            display: none;
+        }
+
+        .control-panel.active {
+            display: block;
+        }
+
+        .panel-section {
+            margin-bottom: 2rem;
+        }
+
+        .panel-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .panel-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #334155;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .control-btn {
+            padding: 0.8rem 1rem;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: #334155;
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .control-btn:active {
+            transform: translateY(1px);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-panel {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .connection-panel {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .input {
+                width: 100%;
+            }
+            
+            .input.short {
+                width: 100%;
+            }
+            
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <h1>📱 Android远程控制</h1>
+            <div class="connection-panel">
+                <div id="connectionInputs">
+                    <input
+                        type="text"
+                        id="ipAddress"
+                        placeholder="设备IP地址"
+                        class="input"
+                    />
+                    <input
+                        type="text"
+                        id="port"
+                        placeholder="端口"
+                        value="8080"
+                        class="input short"
+                    />
+                    <button id="connectButton" class="button primary">
+                        连接
+                    </button>
+                </div>
+                <div id="connectionStatus" style="display: none;">
+                    <span class="status connected">● 已连接</span>
+                    <button id="disconnectButton" class="button danger">
+                        断开
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="screen-container">
+                <canvas id="screenCanvas" width="1080" height="1920"></canvas>
+                <div id="screenPlaceholder" class="screen-placeholder">
+                    <p>请连接设备以查看和控制屏幕</p>
+                </div>
+            </div>
+
+            <div id="controlPanel" class="control-panel">
+                <div class="panel-section">
+                    <h3>快捷操作</h3>
+                    <div class="button-grid">
+                        <button class="control-btn" onclick="sendKey(3)">
+                            Home
+                        </button>
+                        <button class="control-btn" onclick="sendKey(4)">
+                            Back
+                        </button>
+                        <button class="control-btn" onclick="sendKey(24)">
+                            音量+
+                        </button>
+                        <button class="control-btn" onclick="sendKey(25)">
+                            音量-
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>滑动操作</h3>
+                    <div class="button-grid">
+                        <button class="control-btn" onclick="sendSwipe(540, 1500, 540, 500, 500)">
+                            向上滑动
+                        </button>
+                        <button class="control-btn" onclick="sendSwipe(540, 500, 540, 1500, 500)">
+                            向下滑动
+                        </button>
+                        <button class="control-btn" onclick="sendSwipe(200, 960, 880, 960, 500)">
+                            向右滑动
+                        </button>
+                        <button class="control-btn" onclick="sendSwipe(880, 960, 200, 960, 500)">
+                            向左滑动
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+
+        const ipAddressInput = document.getElementById('ipAddress');
+        const portInput = document.getElementById('port');
+        const connectButton = document.getElementById('connectButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+        const connectionInputs = document.getElementById('connectionInputs');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const screenCanvas = document.getElementById('screenCanvas');
+        const screenPlaceholder = document.getElementById('screenPlaceholder');
+        const controlPanel = document.getElementById('controlPanel');
+
+        connectButton.addEventListener('click', connectToDevice);
+        disconnectButton.addEventListener('click', disconnect);
+
+        screenCanvas.addEventListener('click', handleCanvasClick);
+
+        function connectToDevice() {
+            const ipAddress = ipAddressInput.value.trim();
+            const port = portInput.value.trim();
+
+            if (!ipAddress || !port) {
+                alert('请输入IP地址和端口号');
+                return;
+            }
+
+            try {
+                socket = new WebSocket(`ws://${ipAddress}:${port}`);
+                
+                socket.onopen = () => {
+                    isConnected = true;
+                    connectionInputs.style.display = 'none';
+                    connectionStatus.style.display = 'flex';
+                    screenCanvas.classList.add('active');
+                    screenPlaceholder.style.display = 'none';
+                    controlPanel.classList.add('active');
+                    console.log('已连接到设备');
+                };
+
+                socket.onmessage = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const ctx = screenCanvas.getContext('2d');
+                        ctx.clearRect(0, 0, screenCanvas.width, screenCanvas.height);
+                        ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = `data:image/jpeg;base64,${event.data}`;
+                };
+
+                socket.onerror = (error) => {
+                    console.error('WebSocket错误:', error);
+                    disconnect();
+                    alert('连接失败，请检查IP地址和端口号');
+                };
+
+                socket.onclose = () => {
+                    console.log('连接已关闭');
+                    disconnect();
+                };
+            } catch (error) {
+                console.error('连接失败:', error);
+                alert('连接失败，请检查IP地址和端口号');
+            }
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+                socket = null;
+            }
+            isConnected = false;
+            connectionInputs.style.display = 'flex';
+            connectionStatus.style.display = 'none';
+            screenCanvas.classList.remove('active');
+            screenPlaceholder.style.display = 'block';
+            controlPanel.classList.remove('active');
+        }
+
+        function sendClick(x, y) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'click',
+                    x: x,
+                    y: y
+                }));
+            }
+        }
+
+        function sendSwipe(startX, startY, endX, endY, duration) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'swipe',
+                    startX: startX,
+                    startY: startY,
+                    endX: endX,
+                    endY: endY,
+                    duration: duration
+                }));
+            }
+        }
+
+        function sendKey(keyCode) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'key',
+                    keyCode: keyCode
+                }));
+            }
+        }
+
+        function handleCanvasClick(e) {
+            if (!isConnected) return;
+
+            const rect = screenCanvas.getBoundingClientRect();
+            const scaleX = screenCanvas.width / rect.width;
+            const scaleY = screenCanvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            sendClick(Math.round(x), Math.round(y));
+        }
+    </script>
+</body>
+</html>
