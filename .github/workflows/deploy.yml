@@ -1,0 +1,47 @@
+name: Deploy Android Control App
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/scripts/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up environment
+      env:
+        TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
+      run: |
+        echo "Setting up deployment environment..."
+        chmod +x .github/workflows/scripts/deploy.sh
+
+    - name: Run deployment
+      env:
+        TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
+        SERVER_URL: ${{ secrets.SERVER_URL }}
+      run: |
+        echo "===================================="
+        echo "=== Running Deployment ==="
+        echo "===================================="
+        
+        # 执行部署脚本
+        bash .github/workflows/scripts/deploy.sh
+        
+        # 通知测试服务器部署完成
+        if [ -n "$SERVER_URL" ]; then
+          echo "Notifying test server..."
+          curl -X POST "$SERVER_URL" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $TUNNEL_TOKEN" \
+            -d '{"action": "deploy", "app": "android-control"}'
+        fi
+        
+        echo "===================================="
+        echo "=== Deployment Completed ==="
+        echo "===================================="
