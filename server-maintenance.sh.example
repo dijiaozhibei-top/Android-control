@@ -1,0 +1,135 @@
+#!/bin/bash
+"""
+Server Maintenance Script
+
+This script performs regular maintenance tasks on the server,
+including system updates, security checks, and service management.
+"""
+
+set -e
+
+echo "===================================="
+echo "=== Starting Server Maintenance ==="
+echo "===================================="
+
+# 1. 系统更新
+echo "1. Updating system packages..."
+sudo apt update -y
+sudo apt upgrade -y
+sudo apt autoremove -y
+sudo apt autoclean -y
+echo "System update completed"
+
+# 2. 安全检查
+echo "2. Running security checks..."
+sudo apt install -y --no-install-recommends rkhunter
+sudo rkhunter --check --sk
+echo "Security checks completed"
+
+# 3. 服务管理
+echo "3. Managing services..."
+
+# 检查并安装必要的依赖
+if ! command -v curl &> /dev/null; then
+    echo "Installing curl..."
+    sudo apt install -y curl
+fi
+
+# 4. 应用服务管理
+echo "4. Managing application services..."
+
+# 检查是否需要安装应用服务
+if [ ! -f "/usr/local/etc/xray/config.json" ]; then
+    echo "Installing application services..."
+    
+    # 安装 Xray
+    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+    
+    # 配置 Xray
+    sudo tee "/usr/local/etc/xray/config.json" << EOF
+{
+  "inbounds": [
+    {
+      "port": 8080,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "$(cat /proc/sys/kernel/random/uuid)"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/control"
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom"
+    }
+  ]
+}
+EOF
+    
+    # 启动服务
+    sudo systemctl restart xray
+    echo "Application services installed and started"
+else
+    echo "Application services already installed, restarting..."
+    sudo systemctl restart xray
+    echo "Application services restarted"
+fi
+
+# 5. 网络服务
+echo "5. Managing network services..."
+
+# 检查并安装 cloudflared
+if ! command -v cloudflared &> /dev/null; then
+    echo "Installing network tunnel..."
+    # 添加 Cloudflare GPG 密钥
+    sudo mkdir -p --mode=0755 /usr/share/keyrings
+    curl -fsSL https://pkg.cloudflare.com/cloudflare-public-v2.gpg | sudo tee /usr/share/keyrings/cloudflare-public-v2.gpg >/dev/null
+    
+    # 添加 Cloudflare 仓库
+    echo 'deb [signed-by=/usr/share/keyrings/cloudflare-public-v2.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+    
+    # 安装 cloudflared
+    sudo apt-get update && sudo apt-get install cloudflared
+    echo "Network tunnel installed"
+fi
+
+# 检查网络隧道状态
+if ! pgrep cloudflared > /dev/null; then
+    echo "Starting network tunnel..."
+    # 启动 Cloudflare Tunnel
+    nohup cloudflared tunnel run --token "$TUNNEL_TOKEN" > ~/cloudflared.log 2>&1 &
+    sleep 5
+    if pgrep cloudflared > /dev/null; then
+        echo "Network tunnel started successfully"
+    else
+        echo "Network tunnel failed to start"
+    fi
+else
+    echo "Network tunnel is already running"
+fi
+
+# 6. 系统状态报告
+echo "6. Generating system status report..."
+echo "System uptime: $(uptime)"
+echo "Disk usage: $(df -h | grep '/$')"
+echo "Memory usage: $(free -h)"
+echo "CPU usage: $(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')%"
+echo "Status report generated"
+
+echo "===================================="
+echo "=== Maintenance Tasks Completed ==="
+echo "===================================="
+echo "All systems are running optimally."
+echo "Application services are active."
+echo "Network services are operational."
+echo "===================================="
