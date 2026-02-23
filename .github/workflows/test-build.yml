@@ -1,0 +1,46 @@
+name: Test Android Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: List files
+      run: |
+        echo "=== Root ==="
+        ls -la
+        echo ""
+        echo "=== android-client ==="
+        ls -la android-client
+        echo ""
+        echo "=== gradle wrapper ==="
+        ls -la android-client/gradle/wrapper 2>/dev/null || echo "No wrapper"
+
+    - name: Gradle version
+      run: |
+        cd android-client
+        ./gradlew --version || echo "Gradle version failed"
+
+    - name: Check build files
+      run: |
+        cd android-client
+        echo "=== Checking Java files ==="
+        find app/src/main/java -name "*.java" -type f
+        echo ""
+        echo "=== Checking layout files ==="
+        find app/src/main/res/layout -name "*.xml" -type f
+        echo ""
+        echo "=== Checking AndroidManifest ==="
+        cat app/src/main/AndroidManifest.xml

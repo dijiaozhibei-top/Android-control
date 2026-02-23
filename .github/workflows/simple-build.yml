@@ -1,0 +1,39 @@
+name: Simple Build Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Run simple gradle task
+      run: |
+        cd android-client
+        ./gradlew tasks --all
+
+    - name: Try assemble
+      run: |
+        cd android-client
+        ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log || true
+
+    - name: Upload build log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: android-client/build.log
+        retention-days: 7

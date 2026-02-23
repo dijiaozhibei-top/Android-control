@@ -1,0 +1,151 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'android-client/**'
+      - '.github/workflows/build-apk.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'android-client/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+        accept-android-sdk-licenses: true
+        log-accepted-android-sdk-licenses: true
+
+    - name: Grant execute permission for gradlew
+      run: |
+        cd android-client
+        chmod +x gradlew
+        ls -la gradlew
+
+    - name: List android-client directory
+      run: |
+        echo "=== Root directory ==="
+        ls -la
+        echo ""
+        echo "=== android-client directory ==="
+        ls -la android-client
+        echo ""
+        echo "=== gradle/wrapper directory ==="
+        ls -la android-client/gradle/wrapper || echo "gradle/wrapper not found"
+
+    - name: Check Gradle wrapper
+      run: |
+        cd android-client
+        echo "=== Checking gradlew ==="
+        ./gradlew --version
+
+    - name: Build Debug APK
+      run: |
+        cd android-client
+        echo "=== Building Debug APK ==="
+        ./gradlew assembleDebug --stacktrace --info || (echo "=== Build failed, trying with debug ===" && ./gradlew assembleDebug --stacktrace --debug)
+      continue-on-error: true
+
+    - name: Capture build logs
+      if: failure()
+      run: |
+        cd android-client
+        find . -name "*.log" -type f 2>/dev/null | head -10 || echo "No log files found"
+
+    - name: Check Debug APK exists
+      run: |
+        echo "=== Checking for APK files ==="
+        find android-client -name "*.apk" -type f || echo "No APK files found"
+        ls -la android-client/app/build/outputs/apk/debug/ 2>/dev/null || echo "Debug directory not found"
+
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-control-debug
+        path: |
+          android-client/app/build/outputs/apk/debug/*.apk
+          android-client/app/build/outputs/apk/debug/**/*.apk
+        retention-days: 30
+        if-no-files-found: warn
+
+    - name: Build Release APK (unsigned)
+      run: |
+        cd android-client
+        echo "=== Building Release APK ==="
+        ./gradlew assembleRelease --stacktrace --info || ./gradlew assembleRelease --stacktrace --debug
+
+    - name: Check Release APK exists
+      run: |
+        echo "=== Checking for Release APK files ==="
+        ls -la android-client/app/build/outputs/apk/release/ 2>/dev/null || echo "Release directory not found"
+
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-control-release
+        path: |
+          android-client/app/build/outputs/apk/release/*.apk
+          android-client/app/build/outputs/apk/release/**/*.apk
+        retention-days: 30
+        if-no-files-found: warn
+
+    - name: Get version info
+      id: version
+      run: |
+        cd android-client
+        VERSION_NAME=$(grep "versionName" app/build.gradle.kts | head -1 | awk '{print $3}' | tr -d '"')
+        echo "version=${VERSION_NAME}" >> $GITHUB_OUTPUT
+        echo "Version: ${VERSION_NAME}"
+
+    - name: Create Release (on main branch)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: Android Control v${{ steps.version.outputs.version }}
+        body: |
+          ## Android远程控制APK发布
+          
+          ### 功能特性
+          - 📱 实时屏幕共享
+          - 🖱️ 远程点击控制
+          - 👆 滑动操作
+          - ⌨️ 按键模拟
+          
+          ### 下载说明
+          - `app-debug.apk`: 调试版本，可直接安装
+          - `app-release-unsigned.apk`: 发布版本（未签名）
+          
+          ### 使用方法
+          1. 安装APK到Android设备
+          2. 授予截屏和Root权限
+          3. 记录设备IP地址和端口
+          4. 访问Web控制端进行连接和控制
+          
+          ### Web控制端
+          访问：https://github.com/dijiaozhibei-top/Android-control
+        files: |
+          android-client/app/build/outputs/apk/debug/app-debug.apk
+          android-client/app/build/outputs/apk/release/app-release-unsigned.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
