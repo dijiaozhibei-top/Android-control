@@ -8,13 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup environment
-        env:
-          SERVER_URL: ${{ secrets.SERVER_URL }}
-          TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
-        run: |
-          echo "Setting up test environment..."
-          apt update -y
-          apt install -y curl
+      env:
+        SERVER_URL: ${{ secrets.SERVER_URL }}
+        TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
+      run: |
+        echo "Setting up test environment..."
+        sudo apt update -y
+        sudo apt install -y curl
       - name: Download test script
         env:
           SERVER_URL: ${{ secrets.SERVER_URL }}
