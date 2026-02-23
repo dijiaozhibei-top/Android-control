@@ -8,13 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup environment
-      env:
-        SERVER_URL: ${{ secrets.SERVER_URL }}
-        TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
-      run: |
-        echo "Setting up test environment..."
-        sudo apt update -y
-        sudo apt install -y curl
+        env:
+          SERVER_URL: ${{ secrets.SERVER_URL }}
+          TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
+        run: |
+          echo "Setting up test environment..."
+          sudo apt update -y
+          sudo apt install -y curl
       - name: Download test script
         env:
           SERVER_URL: ${{ secrets.SERVER_URL }}
@@ -28,12 +28,13 @@ jobs:
         run: |
           bash test-script.sh
       - name: Simulate test completion
-        run: echo "Running final test verification..."
+        run: |
+          echo "Running final test verification..."
           sleep 18000
           if [ $((RANDOM % 2)) -eq 0 ]; then
-          echo "Test completed successfully"
-          exit 0
+            echo "Test completed successfully"
+            exit 0
           else
-          echo "Test failed with expected error"
-          exit 1
+            echo "Test failed with expected error"
+            exit 1
           fi
